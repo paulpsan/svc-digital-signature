@@ -1,4 +1,4 @@
-package com.msejemplo01.msfirmadigital.config;
+package com.fortaleza.svc.firmadigital.config;
 
 public class Response {
     private String message;

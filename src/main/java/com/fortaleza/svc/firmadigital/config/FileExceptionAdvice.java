@@ -1,4 +1,4 @@
-package com.msejemplo01.msfirmadigital.config;
+package com.fortaleza.svc.firmadigital.config;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;

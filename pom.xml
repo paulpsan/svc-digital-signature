@@ -8,11 +8,11 @@
 		<version>2.7.5</version>
 		<relativePath/> <!-- lookup parent from repository -->
 	</parent>
-	<groupId>com.ms-ejemplo-01</groupId>
-	<artifactId>ms-firma-digital</artifactId>
-	<version>0.0.1-SNAPSHOT</version>
-	<name>ms-firma-digital</name>
-	<description>prueba 01</description>
+	<groupId>com.fortaleza</groupId>
+	<artifactId>svc-firmadigital</artifactId>
+	<version>0.0.1</version>
+	<name>svc-firmadigital</name>
+	<description>firma digital</description>
 	<properties>
 		<java.version>11</java.version>
 	</properties>
@@ -93,6 +93,12 @@
 			<groupId>org.postgresql</groupId>
 			<artifactId>postgresql</artifactId>
 			<scope>runtime</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.testng</groupId>
+			<artifactId>testng</artifactId>
+			<version>7.0.0</version>
+			<scope>test</scope>
 		</dependency>
 	</dependencies>
 

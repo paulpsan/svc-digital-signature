@@ -1,13 +1,13 @@
-package com.msejemplo01.msfirmadigital;
+package com.fortaleza.svc.firmadigital;
 
-import org.junit.jupiter.api.Test;
+//import org.junit.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
 class MsFirmaDigitalApplicationTests {
 
-	@Test
-	void contextLoads() {
-	}
+//	@Test
+//	void contextLoads() {
+//	}
 
 }

@@ -1,6 +1,6 @@
-package com.msejemplo01.msfirmadigital.repo;
+package com.fortaleza.svc.firmadigital.repo;
 
-import com.msejemplo01.msfirmadigital.model.Signatory;
+import com.fortaleza.svc.firmadigital.model.Signatory;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 

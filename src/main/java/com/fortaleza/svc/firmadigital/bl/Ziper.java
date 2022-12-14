@@ -1,11 +1,11 @@
-package com.msejemplo01.msfirmadigital.bl;
+package com.fortaleza.svc.firmadigital.bl;
 
 import com.lowagie.text.*;
 import com.lowagie.text.Font;
-import com.lowagie.text.Image;
 import com.lowagie.text.Rectangle;
 import com.lowagie.text.pdf.*;
 import org.apache.tomcat.util.http.fileupload.FileUtils;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.web.multipart.MultipartFile;
 import java.awt.*;
@@ -28,9 +28,12 @@ import org.apache.commons.codec.binary.Base64;
 
 @Service
 public class Ziper {
-    String path_out_zip = "C:\\Users\\jyujra\\Desktop\\ServerFile-BFO\\ZIP_OUT";
-    String dir_pdf_firma = "C:\\Users\\jyujra\\Desktop\\ServerFile-BFO\\PDF_FIRMADOS";
-    String path_out_zip_home = "C:\\Users\\jyujra\\Desktop\\ServerFile-BFO\\PDF_ZIP";
+    @Value("${path-out-zip}")
+    String path_out_zip;
+    @Value("${dir-pdf-firma}")
+    String dir_pdf_firma;
+    @Value("${path-out-zip-home}")
+    String path_out_zip_home;
     private ArrayList<Documentos> DocumentArray(String dir, String typeFile) throws IOException {
         ArrayList<Documentos> arrayDocumentos = new ArrayList<>();
         java.io.File carpeta = new java.io.File(dir);

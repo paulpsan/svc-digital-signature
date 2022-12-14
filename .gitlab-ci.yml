@@ -1,0 +1,50 @@
+cache:
+  paths:
+    - .m2/repository
+
+variables:
+  MAVEN_OPTS: "-Dmaven.repo.local=$CI_PROJECT_DIR/.m2/repository"
+
+build-job-java:
+  image: cirrusit/java:11.0.10-mvn
+  tags:
+    - bfo-group-linux-docker
+    - bfo-group
+  stage: build
+  script:
+    - PREFIX=""
+    - PRODUCT="internal"
+    - CUSTOMER="fortaleza"
+    - VERSION=`xpath -e '/project/version[1]/text()' pom.xml 2>/dev/null`
+    - ARTIFACT=`xpath -e '/project/artifactId[1]/text()' pom.xml 2>/dev/null`
+    - echo "PRODUCT=$PRODUCT" >> build.env
+    - echo "CUSTOMER=$CUSTOMER" >> build.env
+    - echo "VERSION=$VERSION" >> build.env
+    - echo "ARTIFACT=$ARTIFACT" >> build.env
+    - if [ $CI_COMMIT_BRANCH != "master" ]; then PREFIX=-$CI_COMMIT_BRANCH; fi
+    - echo "PREFIX=$PREFIX" >> build.env
+    - cat build.env
+    - echo "===== Processing artifact $PRODUCT/$ARTIFACT-$CUSTOMER:$VERSION$PREFIX ======"
+    - ./mvnw -s settings.xml --batch-mode -Drepo.id=$NEXUS_SERVER_ID -Drepo.login=$NEXUS_USERNAME -Drepo.pwd=$NEXUS_PASSWORD clean package
+    - mkdir target/dependency-docker
+    - (cd target/dependency-docker; jar -xf ../*.jar)
+    - ls -ahl target
+  artifacts:
+    paths:
+      - target/dependency-docker
+    expire_in: 1 week
+    reports:
+      dotenv: build.env
+
+deploy-job-docker:
+  tags:
+    - bfo-group-linux-docker-shell
+    - bfo-fortaleza-group
+  stage: deploy
+  script:
+    - cat $PASS_FILE | docker login -u $CI_DEPLOY_USER --password-stdin $CI_REGISTRY
+    - docker build . -t $CI_REGISTRY/$PRODUCT/$ARTIFACT-$CUSTOMER:$VERSION$PREFIX
+    - docker push $CI_REGISTRY/$PRODUCT/$ARTIFACT-$CUSTOMER:$VERSION$PREFIX
+  needs:
+    - job: build-job-java
+      artifacts: true

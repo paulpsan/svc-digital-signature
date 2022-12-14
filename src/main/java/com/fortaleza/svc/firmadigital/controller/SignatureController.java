@@ -1,8 +1,8 @@
-package com.msejemplo01.msfirmadigital.controller;
+package com.fortaleza.svc.firmadigital.controller;
 
-import com.msejemplo01.msfirmadigital.config.Response;
-import com.msejemplo01.msfirmadigital.model.Signature;
-import com.msejemplo01.msfirmadigital.service.SignatureService;
+import com.fortaleza.svc.firmadigital.model.Signature;
+import com.fortaleza.svc.firmadigital.config.Response;
+import com.fortaleza.svc.firmadigital.service.SignatureService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;

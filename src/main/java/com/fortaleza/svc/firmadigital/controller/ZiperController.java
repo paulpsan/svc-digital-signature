@@ -1,7 +1,7 @@
-package com.msejemplo01.msfirmadigital.controller;
+package com.fortaleza.svc.firmadigital.controller;
 
-import com.msejemplo01.msfirmadigital.bl.Ziper;
-import com.msejemplo01.msfirmadigital.config.Response;
+import com.fortaleza.svc.firmadigital.bl.Ziper;
+import com.fortaleza.svc.firmadigital.config.Response;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;

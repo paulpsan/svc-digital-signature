@@ -1,0 +1,32 @@
+#--------------------- PORT Server ------------------
+server:
+  port: 8081
+  #--------------------- Filer Settings ------------------
+
+spring:
+  servlet:
+    multipart:
+      max-file-size: 30MB
+      max-request-size: 30MB
+      enabled: false
+  #--------------------JPA-ORM Properties-----------------
+  jpa:
+    database: postgresql
+    show-sql: false
+    hibernate:
+      ddl-auto: update
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+  #--------------------- DB Connection ------------------
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: ${DB_URL:jdbc:postgresql://localhost:5432/bfo_signature_v1.0}
+    username: postgres
+    password: admin
+
+path-out-zip: "C:\\Users\\jyujra\\Desktop\\ServerFile-BFO\\ZIP_OUT"
+dir-pdf-firma: "C:\\Users\\jyujra\\Desktop\\ServerFile-BFO\\PDF_FIRMADOS"
+path-out-zip-home: "C:\\Users\\jyujra\\Desktop\\ServerFile-BFO\\PDF_ZIP"
+

@@ -1,4 +1,4 @@
-package com.msejemplo01.msfirmadigital.model;
+package com.fortaleza.svc.firmadigital.model;
 
 import javax.persistence.*;
 import java.util.Date;

@@ -1,4 +1,4 @@
-package com.msejemplo01.msfirmadigital.bl;
+package com.fortaleza.svc.firmadigital.bl;
 
 import java.util.Date;
 

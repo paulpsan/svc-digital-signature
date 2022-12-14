@@ -1,7 +1,7 @@
-package com.msejemplo01.msfirmadigital.service;
+package com.fortaleza.svc.firmadigital.service;
 
-import com.msejemplo01.msfirmadigital.model.Signatory;
-import com.msejemplo01.msfirmadigital.repo.SignatoryRepo;
+import com.fortaleza.svc.firmadigital.model.Signatory;
+import com.fortaleza.svc.firmadigital.repo.SignatoryRepo;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

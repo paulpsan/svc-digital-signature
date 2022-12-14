@@ -10,7 +10,7 @@ COPY ${DEPENDENCY}/META-INF /app/META-INF
 COPY ${DEPENDENCY}/BOOT-INF/classes /app
 
 ENV EUREKA_URI "http://svc-discovery:8761/eureka"
-ENV HOSTNAME "ms-signature"
+ENV HOSTNAME "svc-signature"
 ENV SPRING_PROFILE "local"
 ENV CONFIG_URI "http://localhost:8890"
 ENV CONFIG_USERNAME "pocketbank"
@@ -40,4 +40,4 @@ ENTRYPOINT ["java",                                                 \
             "-Dspring.jmx.enabled=false",                           \
             "-cp",                                                  \
             "app:app/lib/*",                                        \
-            "com.fortaleza.core.ms.report.MsSignatureApplication"]
+            "com.fortaleza.svc.firmadigital.MsFirmaDigitalApplication"]
