@@ -28,9 +28,9 @@ import org.apache.commons.codec.binary.Base64;
 
 @Service
 public class Ziper {
-    String path_out_zip = "C:\\Users\\jyujra\\Desktop\\ServerFile-BFO\\ZIP_OUT";
-    String dir_pdf_firma = "C:\\Users\\jyujra\\Desktop\\ServerFile-BFO\\PDF_FIRMADOS";
-    String path_out_zip_home = "C:\\Users\\jyujra\\Desktop\\ServerFile-BFO\\PDF_ZIP";
+    String path_out_zip = "/opt/files/ZIP_OUT";
+    String dir_pdf_firma = "/opt/files/PDF_FIRMADOS";
+    String path_out_zip_home = "/opt/files/PDF_ZIP";
     private ArrayList<Documentos> DocumentArray(String dir, String typeFile) throws IOException {
         ArrayList<Documentos> arrayDocumentos = new ArrayList<>();
         java.io.File carpeta = new java.io.File(dir);
@@ -40,7 +40,7 @@ public class Ziper {
         String encode;
         for (java.io.File it : lista) {
             if (it.isFile()) {
-                data = it.getName().split("\\.");
+                data = it.getName().split("/.");
                 if (typeFile.equals(data[1])) {
                     content = Files.readAllBytes(it.toPath());
                     encode = Base64.encodeBase64String(content);
@@ -57,7 +57,7 @@ public class Ziper {
         String[] data;
         for (java.io.File it : lista) {
             if (it.isFile()) {
-                data = it.getName().split("\\.");
+                data = it.getName().split("/.");
                 if (typeFile.equals(data[1])) {
                     String myDate = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(
                             new Date( it.lastModified() )
@@ -84,27 +84,27 @@ public class Ziper {
         return "";
     }
     public ArrayList<DocumentosZIP> list_zip( String nameFolder ) throws IOException {
-        String path = path_out_zip + "\\" + nameFolder;
+        String path = path_out_zip + "/" + nameFolder;
         return ZIPArray( path, "zip" );
     }
     public Boolean extrac_zip(MultipartFile file) throws IOException {
         String[] dataDoc;
         String[] dataFile;
-        dataFile = Objects.requireNonNull(file.getOriginalFilename()).split("\\.");
+        dataFile = Objects.requireNonNull(file.getOriginalFilename()).split("/.");
         if (dataFile[1].equals("zip")) {
             try ( ZipInputStream zin = new ZipInputStream(new ByteArrayInputStream(file.getBytes()))) {
                 ZipEntry entry = null;
                 while ((entry = zin.getNextEntry()) != null) {
                     if (entry.isDirectory()) {
-                        File file_ = new File(path_out_zip_home, "\\" + entry.getName());
+                        File file_ = new File(path_out_zip_home, "/" + entry.getName());
                         file_.mkdir();
                         continue;
                     }
                     int len;
                     byte[] data = new byte[1024];
-                    dataDoc = entry.getName().split("\\.");
+                    dataDoc = entry.getName().split("/.");
                     if ("pdf".equals(dataDoc[1])) {
-                        try ( FileOutputStream fos = new FileOutputStream(path_out_zip_home + "\\" + entry.getName())) {
+                        try ( FileOutputStream fos = new FileOutputStream(path_out_zip_home + "/" + entry.getName())) {
                             while ((len = zin.read(data)) != -1) {
                                 fos.write(data, 0, len);
                             }
@@ -122,7 +122,7 @@ public class Ziper {
         return DocumentArray(path_out_zip_home, "pdf");
     }
     public ArrayList<Documentos> listPDF_f(int carpetaFinal) throws IOException {
-        return DocumentArray(dir_pdf_firma+"\\"+carpetaFinal, "pdf");
+        return DocumentArray(dir_pdf_firma+"/"+carpetaFinal, "pdf");
     }
     private void firmaDigital(String clavePrivada, String firmante, MultipartFile dirCertificationPFX, String dirPDF, String dirPDF_out, String namePDF, int x, int y, int nro_firma) throws IOException, KeyStoreException, CertificateException, NoSuchAlgorithmException, UnrecoverableKeyException, DocumentException {
         File signPdfSrcFile = new File(dirPDF);
@@ -138,7 +138,7 @@ public class Ziper {
 
         PdfReader reader = new PdfReader(dirPDF);
         File temp = new File(signPdfSrcFile.getParent(), System.currentTimeMillis() + ".pdf");
-        FileOutputStream fout = new FileOutputStream(dirPDF_out + "\\" + namePDF + "_" + nro_firma + ".pdf");
+        FileOutputStream fout = new FileOutputStream(dirPDF_out + "/" + namePDF + "_" + nro_firma + ".pdf");
         PdfStamper stp = PdfStamper.createSignature(reader, fout, '\0', temp, true);
         PdfSignatureAppearance sap = stp.getSignatureAppearance();
         sap.setAcro6Layers(true);
@@ -174,7 +174,7 @@ public class Ziper {
     public ArrayList<Documentos> firmaPDF(String clavePrivada, String firmante, MultipartFile file, int x, int y, int firma) throws KeyStoreException, NoSuchAlgorithmException, IOException, CertificateException, UnrecoverableKeyException, DocumentException {
         File directory;
         if (firma == 0) {
-            directory = new File(dir_pdf_firma + "\\" + firma);
+            directory = new File(dir_pdf_firma + "/" + firma);
             if(!directory.exists()){
                 if (directory.mkdir()){
                     System.out.println("Carpeta "+firma);
@@ -183,10 +183,10 @@ public class Ziper {
                 }
             }
             for (Documentos it6 : DocumentArray(path_out_zip_home, "pdf")) {
-                firmaDigital(clavePrivada, firmante, file, it6.rutaDoc, dir_pdf_firma+ "\\" + firma, it6.nombreDoc, x, y, firma);
+                firmaDigital(clavePrivada, firmante, file, it6.rutaDoc, dir_pdf_firma+ "/" + firma, it6.nombreDoc, x, y, firma);
             }
         } else {
-            directory = new File(dir_pdf_firma + "\\" + firma);
+            directory = new File(dir_pdf_firma + "/" + firma);
             if(!directory.exists()){
                 if (directory.mkdir()){
                     System.out.println("Carpeta "+firma);
@@ -195,11 +195,11 @@ public class Ziper {
                 }
             }
             int data = firma - 1;
-            for (Documentos it6 : DocumentArray(dir_pdf_firma + "\\" + data, "pdf")) {
-                firmaDigital(clavePrivada, firmante, file, it6.rutaDoc, dir_pdf_firma+ "\\" + firma, it6.nombreDoc, x, y, firma);
+            for (Documentos it6 : DocumentArray(dir_pdf_firma + "/" + data, "pdf")) {
+                firmaDigital(clavePrivada, firmante, file, it6.rutaDoc, dir_pdf_firma+ "/" + firma, it6.nombreDoc, x, y, firma);
             }
         }
-        return DocumentArray(dir_pdf_firma+"\\"+firma, "pdf");
+        return DocumentArray(dir_pdf_firma+"/"+firma, "pdf");
     }
     public Boolean verific_firma(String clavePrivada, MultipartFile dirCertificationPFX) throws KeyStoreException, IOException, CertificateException, NoSuchAlgorithmException, InvalidAlgorithmParameterException {
         try {
@@ -214,9 +214,9 @@ public class Ziper {
         }
     }
     public String compress_file(String name_zip, String nameFolderUser, String folder_final) throws IOException {
-        String path_dowload = path_out_zip + "\\" + nameFolderUser + "\\" + name_zip + ".zip";
+        String path_dowload = path_out_zip + "/" + nameFolderUser + "/" + name_zip + ".zip";
         System.out.println(path_dowload);
-        File directorio = new File(path_out_zip + "\\" + nameFolderUser);
+        File directorio = new File(path_out_zip + "/" + nameFolderUser);
         if(!directorio.exists()){
             if (directorio.mkdir()){
                 System.out.println("Carpeta de usuario "+nameFolderUser);
@@ -224,8 +224,8 @@ public class Ziper {
                 System.out.println("Error al crear la carpeta");
             }
         }
-        try ( ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(path_out_zip + "\\" + nameFolderUser + "\\" + name_zip + ".zip"))) {
-            for (Documentos doc : DocumentArray(dir_pdf_firma+"\\"+folder_final, "pdf")) {
+        try ( ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(path_out_zip + "/" + nameFolderUser + "/" + name_zip + ".zip"))) {
+            for (Documentos doc : DocumentArray(dir_pdf_firma+"/"+folder_final, "pdf")) {
                 File file = new File(doc.rutaDoc);
                 ZipEntry entry = new ZipEntry(file.getName());
                 zos.putNextEntry(entry);
@@ -244,7 +244,7 @@ public class Ziper {
         return path_dowload;
     }
     public String dowloadZIP(String nameFolder, String nameFile) throws IOException {
-        return path_out_zip+"\\"+nameFolder+"\\"+nameFile;
+        return path_out_zip+"/"+nameFolder+"/"+nameFile;
     }
     public void endProcess() throws IOException {
         deleteFile(path_out_zip_home);

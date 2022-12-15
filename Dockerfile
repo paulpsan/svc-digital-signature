@@ -40,4 +40,4 @@ ENTRYPOINT ["java",                                                 \
             "-Dspring.jmx.enabled=false",                           \
             "-cp",                                                  \
             "app:app/lib/*",                                        \
-            "com.fortaleza.core.ms.report.MsSignatureApplication"]
+            "com.msejemplo01.msfirmadigital.MsFirmaDigitalApplication"]
