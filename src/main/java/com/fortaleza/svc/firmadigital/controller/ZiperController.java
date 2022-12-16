@@ -29,7 +29,7 @@ public class ZiperController {
         try {
             boolean state = ziper.extrac_zip(files);
             if (!state){
-                System.out.println("ARCHOVOS DESCOMPRIMIDOS");
+                System.out.println("ARCHIVOS DESCOMPRIMIDOS");
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response("EL archivo seleccionado no es un ZIP"));
             }else{
                 return ResponseEntity.status(HttpStatus.OK).body(new Response("Archivo ZIP descomprimido con Exito!!!"));
@@ -39,11 +39,11 @@ public class ZiperController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response("Error al Prcoesar el archivo contacte con el Administrador"));
         }
     }
-    @RequestMapping(value="/get_files_word", method = RequestMethod.GET)
+
+    @RequestMapping(value="/get_files_pdf", method = RequestMethod.GET)
     public  ResponseEntity<Object> list_word() throws IOException{
         try {
-            var data = ziper.list_doc_files_word();
-            //var data = ziper.listPDF_f();
+            var data = ziper.list_doc_pdf();
             System.out.println("PDF LISTADOS");
             return ResponseEntity.status(HttpStatus.OK).body( data );
         }catch (Error error){
@@ -51,16 +51,18 @@ public class ZiperController {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response("Error contacte con el Administrador"));
         }
     }
-    @RequestMapping("/files_pdf_f")
+
+    @RequestMapping(value = "/files_pdf_signed", method = RequestMethod.POST)
     public ResponseEntity<Object> convertPdf(@RequestParam("carpetaFinal") int carpetaFinal) throws Exception{
         try{
             System.out.println("PDF FIRMADOS LISTADOS");
-            return ResponseEntity.status(HttpStatus.OK).body(ziper.listPDF_f(carpetaFinal));
+            return ResponseEntity.status(HttpStatus.OK).body(ziper.listPDF_signed(carpetaFinal));
         }catch (Error error){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response("Error contacte con el Administrador"));
         }
     }
-    @RequestMapping("/firma_files_pdf")
+
+    @RequestMapping(value = "/signed_files_pdf", method = RequestMethod.POST)
     public ResponseEntity<Object> firma_PDF(
             @RequestParam("contraseña") String clavePrivada,
             @RequestParam("firmante") String firmante,
@@ -78,8 +80,9 @@ public class ZiperController {
         return ResponseEntity.status(HttpStatus.OK)
                 .body(new Response("ok"));
     }
-    @RequestMapping(value = "/verif_firma")
-    public ResponseEntity<Object> verif(
+
+    @RequestMapping(value = "/certificate_verification", method = RequestMethod.POST)
+    public ResponseEntity<Object> certificate_verification(
             @RequestParam String password,
             @RequestParam("files") MultipartFile files
     ) throws CertificateException, KeyStoreException, IOException, NoSuchAlgorithmException {
@@ -87,7 +90,7 @@ public class ZiperController {
             if(password.equals("")){
                 return ResponseEntity.status(HttpStatus.OK).body("Password NONE");
             }
-            var data = ziper.verific_firma(password, files);
+            var data = ziper.certificate_verification(password, files);
             if(!data){
                 return ResponseEntity.status(HttpStatus.OK).body("Contraseña Incorrecta");
             }else{
@@ -101,13 +104,12 @@ public class ZiperController {
         }
     }
 
-    @RequestMapping(value = "/compress_file")
-    public ResponseEntity<Object> compress_file(
-            @RequestParam String name_zip,
-            @RequestParam String name_folder_user,
-            @RequestParam String folder_final) throws IOException {
+    @RequestMapping(value = "/compress_files_pdf", method = RequestMethod.POST)
+    public ResponseEntity<Object> compress_files_pdf(
+            @RequestBody String name_zip,
+            @RequestBody String folder_final) throws IOException {
         try{
-            var data = ziper.compress_file( name_zip, name_folder_user, folder_final);
+            var data = ziper.compress_files_pdf( name_zip, folder_final);
             System.out.println("Archivos Comprimidos");
             File file = new File(data);
             InputStreamResource resource = new InputStreamResource(new FileInputStream(file));
@@ -153,13 +155,26 @@ public class ZiperController {
         }
     }
 
-
     @RequestMapping(value = "/end_process")
-    public ResponseEntity<Object> end_process(){
+    public ResponseEntity<Object> end_process( @RequestParam String name_zip,
+                                               @RequestParam String name_folder_user,
+                                               @RequestParam String folder_final){
         try {
+            ziper.end_process_file(name_zip, name_folder_user, folder_final);
             ziper.endProcess();
             System.out.println("Proceso Terminado");
             return ResponseEntity.status(HttpStatus.OK).body(new Response("Proceso de Firma Digital Terminado"));
+        } catch (IOException e) {
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response("Proceso de Firma Digital Interrumpido"));
+        }
+    }
+
+    @RequestMapping(value = "/cancel_process")
+    public ResponseEntity<Object> cancel_process(){
+        try {
+            ziper.endProcess();
+            System.out.println("Proceso Cancelado.");
+            return ResponseEntity.status(HttpStatus.OK).body(new Response("Proceso de Firma Digital Cancelado."));
         } catch (IOException e) {
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response("Proceso de Firma Digital Interrumpido"));
         }
