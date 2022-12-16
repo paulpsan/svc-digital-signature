@@ -40,7 +40,7 @@ public class Ziper {
         String encode;
         for (java.io.File it : lista) {
             if (it.isFile()) {
-                data = it.getName().split("/.");
+                data = it.getName().split("\\.");
                 if (typeFile.equals(data[1])) {
                     content = Files.readAllBytes(it.toPath());
                     encode = Base64.encodeBase64String(content);
@@ -57,7 +57,7 @@ public class Ziper {
         String[] data;
         for (java.io.File it : lista) {
             if (it.isFile()) {
-                data = it.getName().split("/.");
+                data = it.getName().split("\\.");
                 if (typeFile.equals(data[1])) {
                     String myDate = new SimpleDateFormat("dd-MM-yyyy HH:mm:ss").format(
                             new Date( it.lastModified() )
@@ -90,7 +90,7 @@ public class Ziper {
     public Boolean extrac_zip(MultipartFile file) throws IOException {
         String[] dataDoc;
         String[] dataFile;
-        dataFile = Objects.requireNonNull(file.getOriginalFilename()).split("/.");
+        dataFile = Objects.requireNonNull(file.getOriginalFilename()).split("\\.");
         if (dataFile[1].equals("zip")) {
             try ( ZipInputStream zin = new ZipInputStream(new ByteArrayInputStream(file.getBytes()))) {
                 ZipEntry entry = null;
@@ -102,7 +102,7 @@ public class Ziper {
                     }
                     int len;
                     byte[] data = new byte[1024];
-                    dataDoc = entry.getName().split("/.");
+                    dataDoc = entry.getName().split("\\.");
                     if ("pdf".equals(dataDoc[1])) {
                         try ( FileOutputStream fos = new FileOutputStream(path_out_zip_home + "/" + entry.getName())) {
                             while ((len = zin.read(data)) != -1) {
