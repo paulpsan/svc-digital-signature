@@ -2,7 +2,9 @@ package com.fortaleza.svc.firmadigital.controller;
 
 import com.fortaleza.svc.firmadigital.bl.Ziper;
 import com.fortaleza.svc.firmadigital.config.Response;
+import com.fortaleza.svc.firmadigital.dto.*;
 import lombok.extern.slf4j.Slf4j;
+import org.bouncycastle.ocsp.Req;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.*;
@@ -53,10 +55,10 @@ public class ZiperController {
     }
 
     @RequestMapping(value = "/files_pdf_signed", method = RequestMethod.POST)
-    public ResponseEntity<Object> convertPdf(@RequestParam("carpetaFinal") int carpetaFinal) throws Exception{
+    public ResponseEntity<Object> convertPdf(@RequestBody ImportRequestFilesPDFSigned importRequestFilesPDFSigned) throws Exception{
         try{
             System.out.println("PDF FIRMADOS LISTADOS");
-            return ResponseEntity.status(HttpStatus.OK).body(ziper.listPDF_signed(carpetaFinal));
+            return ResponseEntity.status(HttpStatus.OK).body(ziper.listPDF_signed(importRequestFilesPDFSigned.getCarpetaFinal()));
         }catch (Error error){
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response("Error contacte con el Administrador"));
         }
@@ -106,10 +108,9 @@ public class ZiperController {
 
     @RequestMapping(value = "/compress_files_pdf", method = RequestMethod.POST)
     public ResponseEntity<Object> compress_files_pdf(
-            @RequestBody String name_zip,
-            @RequestBody String folder_final) throws IOException {
+            @RequestBody ImportRequestCompressPDF compressPDF) throws IOException {
         try{
-            var data = ziper.compress_files_pdf( name_zip, folder_final);
+            var data = ziper.compress_files_pdf( compressPDF.getName_zip(), compressPDF.getFolder_final());
             System.out.println("Archivos Comprimidos");
             File file = new File(data);
             InputStreamResource resource = new InputStreamResource(new FileInputStream(file));
@@ -129,13 +130,12 @@ public class ZiperController {
         }
     }
 
-    @RequestMapping(value = "/dowload_file")
-    public ResponseEntity<Object> dowload_file(
-            @RequestParam String nameFolder,
-            @RequestParam String nameFile
-    ) throws IOException {
+    @RequestMapping(value = "/download_zip_signature", method = RequestMethod.POST)
+    public ResponseEntity<Object> download_file(
+            @RequestBody ImportRequestDownloadZIP importRequestDownloadZIP
+            ) throws IOException {
         try{
-            var dataDowload = ziper.dowloadZIP(nameFolder,nameFile);
+            var dataDowload = ziper.downloadZIP(importRequestDownloadZIP.getNameFolder(), importRequestDownloadZIP.getNameFile());
             System.out.println("Archivos Encotrados....");
             File file = new File(dataDowload);
             InputStreamResource resource = new InputStreamResource(new FileInputStream(file));
@@ -155,12 +155,12 @@ public class ZiperController {
         }
     }
 
-    @RequestMapping(value = "/end_process")
-    public ResponseEntity<Object> end_process( @RequestParam String name_zip,
-                                               @RequestParam String name_folder_user,
-                                               @RequestParam String folder_final){
+    @RequestMapping(value = "/end_process_signature", method = RequestMethod.POST)
+    public ResponseEntity<Object> end_process_signature(@RequestBody ImportRequestEndProcessSignature importRequestEndProcessSignature){
         try {
-            ziper.end_process_file(name_zip, name_folder_user, folder_final);
+            ziper.end_process_signature(importRequestEndProcessSignature.getName_zip(),
+                                        importRequestEndProcessSignature.getName_folder_user(),
+                                        importRequestEndProcessSignature.getFolder_final());
             ziper.endProcess();
             System.out.println("Proceso Terminado");
             return ResponseEntity.status(HttpStatus.OK).body(new Response("Proceso de Firma Digital Terminado"));
@@ -169,7 +169,7 @@ public class ZiperController {
         }
     }
 
-    @RequestMapping(value = "/cancel_process")
+    @RequestMapping(value = "/cancel_process_signature", method = RequestMethod.POST)
     public ResponseEntity<Object> cancel_process(){
         try {
             ziper.endProcess();
@@ -180,10 +180,10 @@ public class ZiperController {
         }
     }
 
-    @RequestMapping(value = "/zip_signature")
-    public ResponseEntity<Object> list_zip( @RequestParam("nameFolder") String nameFolder ) throws IOException{
+    @RequestMapping(value = "/zip_signature", method = RequestMethod.POST)
+    public ResponseEntity<Object> list_zip(@RequestBody ImportRequestListZIP importRequestListZIP) throws IOException{
         try {
-            var data = ziper.list_zip(nameFolder);
+            var data = ziper.list_zip(importRequestListZIP.getNameFolder());
             System.out.println("ZIP LISTADOS");
             return ResponseEntity.status(HttpStatus.OK).body( data );
         }catch (Error error){

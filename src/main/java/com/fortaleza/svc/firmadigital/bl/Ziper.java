@@ -240,7 +240,7 @@ public class Ziper {
         }
         return path_dowload;
     }
-    public void end_process_file(String name_zip, String nameFolderUser, String folder_final) throws IOException {
+    public void end_process_signature(String name_zip, String nameFolderUser, String folder_final) throws IOException {
         String path_dowload = path_out_zip + path_system + nameFolderUser + path_system + name_zip + ".zip";
         System.out.println(path_dowload);
         File directorio = new File(path_out_zip + path_system + nameFolderUser);
@@ -270,7 +270,7 @@ public class Ziper {
         }
         endProcess();
     }
-    public String dowloadZIP(String nameFolder, String nameFile) throws IOException {
+    public String downloadZIP(String nameFolder, String nameFile) throws IOException {
         return path_out_zip+ path_system +nameFolder+ path_system + nameFile;
     }
     public void endProcess() throws IOException {
