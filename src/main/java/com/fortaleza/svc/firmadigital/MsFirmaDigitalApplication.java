@@ -27,36 +27,4 @@ public class MsFirmaDigitalApplication {
 			// ignore
 		}
 	}
-	/*@Bean
-	public WebMvcConfigurer corsConfiguration(){
-		return new WebMvcConfigurer() {
-			@Override
-			public void addCorsMappings(CorsRegistry registry) {
-				registry.addMapping("/**")
-						.exposedHeaders("access-control-expose-headers", "Authorization", "Expiration",
-								"x-customer-id", "x-audit-host", "x-audit-agency", "x-audit-user", "x-audit-source")
-						.allowedHeaders("Authorization", "Content-Type", "x-customer-id",
-								"x-audit-host", "x-audit-agency", "x-audit-user", "x-audit-source")
-						.allowedMethods("*")
-						.allowedOrigins("*");
-			}
-		};
-
-	}*/
-
-
-	//@Bean
-	/*public WebMvcConfigurer corsConfigurer() {
-		return new WebMvcConfigurer() {
-			@Override
-			public void addCorsMappings(CorsRegistry registry) {
-				registry.addMapping("/*")
-						.allowedOrigins("http://127.0.0.1:5173")
-						.allowedMethods("PUT", "DELETE", "GET", "POST")
-						.allowedHeaders("*")
-						.exposedHeaders("*")
-						.allowCredentials(false).maxAge(3600);
-			}
-		};
-	}*/
 }

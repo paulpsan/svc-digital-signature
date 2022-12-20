@@ -4,13 +4,13 @@ import com.fortaleza.svc.firmadigital.bl.Ziper;
 import com.fortaleza.svc.firmadigital.config.Response;
 import com.fortaleza.svc.firmadigital.dto.*;
 import lombok.extern.slf4j.Slf4j;
-import org.bouncycastle.ocsp.Req;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.io.InputStreamResource;
 import org.springframework.http.*;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
@@ -18,26 +18,30 @@ import java.security.InvalidAlgorithmParameterException;
 import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
 import java.security.cert.CertificateException;
-
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @Slf4j
 @RequestMapping("/v1/ms-firmas")
 public class ZiperController {
+
+    private static Logger LOGGER = LoggerFactory.getLogger(ZiperController.class);
     @Autowired
     private Ziper ziper;
     @RequestMapping(value ="/extract_files", method = RequestMethod.POST)
     public ResponseEntity<Object> upFile(@RequestParam("files") MultipartFile files ) throws IOException{
         try {
-            boolean state = ziper.extrac_zip(files);
+            boolean state = ziper.extract_zip(files);
             if (!state){
                 System.out.println("ARCHIVOS DESCOMPRIMIDOS");
+                LOGGER.info("BAD-REQUEST: La solicitud extract_files no se ejecuto con exito");
                 return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response("EL archivo seleccionado no es un ZIP"));
             }else{
+                LOGGER.info("SUCCESS-REQUEST: La solicitud extract_files se ejecuto con exito");
                 return ResponseEntity.status(HttpStatus.OK).body(new Response("Archivo ZIP descomprimido con Exito!!!"));
             }
         }catch (Error error){
-            System.out.println("Error al extraer archivos -> " + error);
+            LOGGER.info("ERROR-REQUEST: La solicitud extract_files no se ejecuto");
+            LOGGER.info(String.valueOf(error));
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response("Error al Prcoesar el archivo contacte con el Administrador"));
         }
     }
@@ -47,9 +51,11 @@ public class ZiperController {
         try {
             var data = ziper.list_doc_pdf();
             System.out.println("PDF LISTADOS");
+            LOGGER.info("SUCCESS-REQUEST: La solicitud get_files_pdf se ejecuto con exito");
             return ResponseEntity.status(HttpStatus.OK).body( data );
         }catch (Error error){
-            System.out.println("Lista de Archivos Error->"+error);
+            LOGGER.info("BAD-REQUEST: La solicitud get_files_pdf no se ejecuto ");
+            LOGGER.info(String.valueOf(error));
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response("Error contacte con el Administrador"));
         }
     }
@@ -58,8 +64,11 @@ public class ZiperController {
     public ResponseEntity<Object> convertPdf(@RequestBody ImportRequestFilesPDFSigned importRequestFilesPDFSigned) throws Exception{
         try{
             System.out.println("PDF FIRMADOS LISTADOS");
+            LOGGER.info("SUCCESS-REQUEST: La solicitud files_pdf_signed se ejecuto con exito");
             return ResponseEntity.status(HttpStatus.OK).body(ziper.listPDF_signed(importRequestFilesPDFSigned.getCarpetaFinal()));
         }catch (Error error){
+            LOGGER.info("BAD-REQUEST: La solicitud files_pdf_signed se ejecuto con exito");
+            LOGGER.info(String.valueOf(error));
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response("Error contacte con el Administrador"));
         }
     }
@@ -73,12 +82,13 @@ public class ZiperController {
             @RequestParam("y") int y,
             @RequestParam("firma") int firma) throws Exception{
         if ( clavePrivada.equals("") ){
-            System.out.println("Error Al Firmar");
+            LOGGER.info("INTERNAL_SERVER_ERROR: La solicitud signed_files_pdf no se ejecuto");
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("error");
         }
         System.out.println("Archivos Firmados" + firma);
-        ziper.firmaPDF(clavePrivada, firmante, file, x, y, firma);
+        LOGGER.info("SUCCESS-REQUEST: La solicitud signed_files_pdf se ejecuto con exito");
+        ziper.signaturePDF(clavePrivada, firmante, file, x, y, firma);
         return ResponseEntity.status(HttpStatus.OK)
                 .body(new Response("ok"));
     }
@@ -87,21 +97,27 @@ public class ZiperController {
     public ResponseEntity<Object> certificate_verification(
             @RequestParam String password,
             @RequestParam("files") MultipartFile files
-    ) throws CertificateException, KeyStoreException, IOException, NoSuchAlgorithmException {
+    ) throws NoSuchAlgorithmException {
         try {
             if(password.equals("")){
+                LOGGER.info("BAD-REQUEST: La solicitud certificate_verification No recibio la contraseña");
                 return ResponseEntity.status(HttpStatus.OK).body("Password NONE");
             }
             var data = ziper.certificate_verification(password, files);
             if(!data){
+                LOGGER.info("SUCCESS-REQUEST: La solicitud certificate_verification muestra contraseña es incorrecta");
                 return ResponseEntity.status(HttpStatus.OK).body("Contraseña Incorrecta");
             }else{
+                LOGGER.info("SUCCESS-REQUEST: La solicitud certificate_verification es contraseña correcta");
                 return ResponseEntity.status(HttpStatus.OK).body("Contraseña Verificada");
             }
         }catch (Error error){
-            System.out.println("Verifiacaion-->"+error);
+            LOGGER.info("BAD-REQUEST: La solicitud files_pdf_signed no se ejecuto con exito");
+            LOGGER.info(String.valueOf(error));
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response("Error contacte con el Administrador"));
         } catch (InvalidAlgorithmParameterException e) {
+            LOGGER.info("BAD-REQUEST: La solicitud files_pdf_signed no se ejecuto.");
+            LOGGER.info(String.valueOf(e));
             throw new RuntimeException(e);
         }
     }
@@ -123,9 +139,11 @@ public class ZiperController {
             ResponseEntity<Object> responseEntity = ResponseEntity.ok().headers(headers)
                     .contentLength(file.length())
                     .contentType(MediaType.parseMediaType("application/zip")).body(resource);
+            LOGGER.info("SUCCESS-REQUEST: La solicitud compress_files_pdf se ejecuto con exito.");
             return responseEntity;
         }catch (Error error){
-            System.out.println("Verifiacaion-->"+error);
+            LOGGER.info("BAD-REQUEST: La solicitud compress_files_pdf no se ejecuto.");
+            LOGGER.info(String.valueOf(error));
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response("error"));
         }
     }
@@ -148,9 +166,11 @@ public class ZiperController {
             ResponseEntity<Object> responseEntity = ResponseEntity.ok().headers(headers)
                     .contentLength(file.length())
                     .contentType(MediaType.parseMediaType("application/zip")).body(resource);
+            LOGGER.info("SUCCESS-REQUEST: La solicitud download_zip_signature se ejecuto con exito.");
             return responseEntity;
         }catch (Error error){
-            System.out.println("Verifiacaion-->"+error);
+            LOGGER.info("BAD-REQUEST: La solicitud download_zip_signature no se ejecuto.");
+            LOGGER.info(String.valueOf(error));
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response("error"));
         }
     }
@@ -162,9 +182,12 @@ public class ZiperController {
                                         importRequestEndProcessSignature.getName_folder_user(),
                                         importRequestEndProcessSignature.getFolder_final());
             ziper.endProcess();
+            LOGGER.info("SUCCESS-REQUEST: La solicitud end_process_signature se ejecuto con exito.");
             System.out.println("Proceso Terminado");
             return ResponseEntity.status(HttpStatus.OK).body(new Response("Proceso de Firma Digital Terminado"));
         } catch (IOException e) {
+            LOGGER.info("BAD-REQUEST: La solicitud end_process_signature no se ejecuto.");
+            LOGGER.info(String.valueOf(e));
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response("Proceso de Firma Digital Interrumpido"));
         }
     }
@@ -173,21 +196,26 @@ public class ZiperController {
     public ResponseEntity<Object> cancel_process(){
         try {
             ziper.endProcess();
+            LOGGER.info("SUCCESS-REQUEST: La solicitud cancel_process_signature se ejecuto con exito.");
             System.out.println("Proceso Cancelado.");
             return ResponseEntity.status(HttpStatus.OK).body(new Response("Proceso de Firma Digital Cancelado."));
         } catch (IOException e) {
+            LOGGER.info("BAD-REQUEST: La solicitud cancel_process_signature no se ejecuto.");
+            LOGGER.info(String.valueOf(e));
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response("Proceso de Firma Digital Interrumpido"));
         }
     }
 
     @RequestMapping(value = "/zip_signature", method = RequestMethod.POST)
-    public ResponseEntity<Object> list_zip(@RequestBody ImportRequestListZIP importRequestListZIP) throws IOException{
+    public ResponseEntity<Object> list_zip(@RequestBody ImportRequestListZIP importRequestListZIP) {
         try {
             var data = ziper.list_zip(importRequestListZIP.getNameFolder());
             System.out.println("ZIP LISTADOS");
+            LOGGER.info("SUCCESS-REQUEST: La solicitud zip_signature se ejecuto con exito.");
             return ResponseEntity.status(HttpStatus.OK).body( data );
         }catch (Error error){
-            System.out.println("Lista de Archivos ZIP Error->"+error);
+            LOGGER.info("BAD-REQUEST: La solicitud zip_signature no se ejecuto.");
+            LOGGER.info(String.valueOf(error));
             return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response("Error contacte con el Administrador"));
         }
     }
