@@ -15,9 +15,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.security.InvalidAlgorithmParameterException;
-import java.security.KeyStoreException;
 import java.security.NoSuchAlgorithmException;
-import java.security.cert.CertificateException;
 @CrossOrigin(origins = "*", maxAge = 3600)
 @RestController
 @Slf4j
@@ -206,10 +204,11 @@ public class ZiperController {
         }
     }
 
-    @RequestMapping(value = "/zip_signature", method = RequestMethod.POST)
-    public ResponseEntity<Object> list_zip(@RequestBody ImportRequestListZIP importRequestListZIP) {
+    @RequestMapping(value = "/zip_signature", method = RequestMethod.GET)
+    @ResponseBody
+    public ResponseEntity<Object> list_zip(@RequestParam String nameFolder) {
         try {
-            var data = ziper.list_zip(importRequestListZIP.getNameFolder());
+            var data = ziper.list_zip(nameFolder);
             System.out.println("ZIP LISTADOS");
             LOGGER.info("SUCCESS-REQUEST: La solicitud zip_signature se ejecuto con exito.");
             return ResponseEntity.status(HttpStatus.OK).body( data );
