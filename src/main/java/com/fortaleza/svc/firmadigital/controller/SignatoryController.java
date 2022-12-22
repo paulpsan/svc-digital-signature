@@ -30,13 +30,13 @@ public class SignatoryController {
             LOGGER.info("SUCCESS-REQUEST: La solicitud SignatoryController GetMapping se ejecuto con exito");
             if( data.stream().count() == 0 ){
                 LOGGER.info("SUCCESS-REQUEST: La solicitud SignatoryController GetMapping se ejecuto con exito pero no se tien datos");
-                return ResponseEntity.status(HttpStatus.OK).body( new Response("No se tiene datos en la TABLA SIGNATORY") );
+                return ResponseEntity.status(HttpStatus.NO_CONTENT).body( new Response("No se tiene datos en la TABLA SIGNATORY") );
             }
             return ResponseEntity.status(HttpStatus.OK).body( data );
         }catch (Exception exc){
             LOGGER.info("BAD-REQUEST: La solicitud SignatoryController GetMapping no se ejecuto con exito");
             LOGGER.info(String.valueOf(exc));
-            return ResponseEntity.status(HttpStatus.OK).body( new Response("Contactese con el Administrador") );
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body( new Response("Contactese con el Administrador") );
         }
     }
 
@@ -49,11 +49,11 @@ public class SignatoryController {
         }catch (Exception ex){
             LOGGER.info("BAD-REQUEST: La solicitud SignatoryController PostMapping no se ejecuto con exito");
             LOGGER.info(String.valueOf(ex));
-            return ResponseEntity.status(HttpStatus.OK).body( new Response("Contactese con el Administrador.") );
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body( new Response("Contactese con el Administrador.") );
         }
     }
 
-    @PutMapping
+    @PutMapping("{id_signature_process}")
     public ResponseEntity<Object> updateSignature( @RequestBody Signatory signatory ) {
         try{
             signatoryService.updateSignatory(signatory);
@@ -62,7 +62,7 @@ public class SignatoryController {
         }catch (Exception ex){
             LOGGER.info("BAD-REQUEST: La solicitud SignatoryController PutMapping no se ejecuto con exito");
             LOGGER.info(String.valueOf(ex));
-            return ResponseEntity.status(HttpStatus.OK).body( new Response("Contactese con el Administrador.") );
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body( new Response("Contactese con el Administrador.") );
         }
     }
 
@@ -75,7 +75,7 @@ public class SignatoryController {
         }catch (Exception ex){
             LOGGER.info("BAD-REQUEST: La solicitud SignatoryController DeleteMapping no se ejecuto con exito");
             LOGGER.info(String.valueOf(ex));
-            return ResponseEntity.status(HttpStatus.OK).body( new Response("Contactese con el Administrador.") );
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body( new Response("Contactese con el Administrador.") );
         }
     }
 }

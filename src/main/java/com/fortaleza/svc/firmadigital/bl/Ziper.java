@@ -27,9 +27,12 @@ import java.util.zip.ZipOutputStream;
 import org.apache.commons.codec.binary.Base64;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
+import com.lowagie.text.Image;
+
 @Service
 public class Ziper {
-    private static Logger LOGGER = LoggerFactory.getLogger(Ziper.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(Ziper.class);
     /**
      * Esta varable hace referencia al espaciondonde se guardaran los ZIP con los PDF firmados
      */
@@ -208,9 +211,10 @@ public class Ziper {
      * @param nro_firma cantidad de firmas que se realizara dentro del PDF
      * @throws IOException,KeyStoreException,CertificateException,NoSuchAlgorithmException,UnrecoverableKeyException,DocumentException
      */
-    private void digital_signature(String password, String signatory, MultipartFile dirCertificationPFX, String dirPDF, String dirPDF_out, String namePDF, int x, int y, int nro_firma) throws IOException, KeyStoreException, CertificateException, NoSuchAlgorithmException, UnrecoverableKeyException, DocumentException {
+    private void digital_signature(String password,String cargo, String signatory, MultipartFile dirCertificationPFX, String dirPDF, String dirPDF_out, String namePDF, int x, int y, int nro_firma) throws IOException, KeyStoreException, CertificateException, NoSuchAlgorithmException, UnrecoverableKeyException, DocumentException {
         LOGGER.info("parametro password methodo(digital_signature) {}", password);
         LOGGER.info("parametro signatory methodo(digital_signature) {}", signatory);
+        LOGGER.info("parametro cargo methodo(digital_signature) {}", cargo);
         LOGGER.info("parametro dirCertificationPFX methodo(digital_signature) {}", dirCertificationPFX);
         LOGGER.info("parametro dirPDF methodo(digital_signature) {}", dirPDF);
         LOGGER.info("parametro dirPDF_out methodo(digital_signature) {}", dirPDF_out);
@@ -240,7 +244,8 @@ public class Ziper {
         PdfSignatureAppearance sap = stp.getSignatureAppearance();
         sap.setAcro6Layers(true);
         sap.setCrypto(key, (java.security.cert.Certificate[]) chain, null, PdfSignatureAppearance.WINCER_SIGNED);
-        sap.setVisibleSignature(new Rectangle(x, y, x + 200, y + 68), reader.getNumberOfPages(), null);
+        sap.setVisibleSignature(new Rectangle(x, y, x + 200, y + 200), reader.getNumberOfPages(), null);
+        reader.close();
         PdfTemplate n2 = sap.getLayer(2);
         n2.setCharacterSpacing(0.0f);
         ColumnText ct = new ColumnText(n2);
@@ -251,22 +256,32 @@ public class Ziper {
         Font font1 = new Font(bf, 8, Font.ITALIC, Color.BLUE);
         Font font2 = new Font(bf, 10, Font.BOLD, Color.BLUE);
         Font font3 = new Font(bf, 8, Font.NORMAL, Color.BLUE);
+        Font font4 = new Font(bf, 10, Font.NORMAL, Color.BLUE);
         p1.setFont(font1);
         ct.addElement(p1);
         Paragraph p = new Paragraph(signatory, font2);
         p.setAlignment(Element.ALIGN_CENTER);
         Paragraph p2 = new Paragraph("Firmado digitalmente por:", font1);
+        Paragraph p4 = new Paragraph("Representante Legal", font4);
+        Paragraph p5 = new Paragraph(cargo, font4);
+        Paragraph p6 = new Paragraph("Banco Fortaleza", font4);
         Paragraph p3 = new Paragraph(date, font3);
         p2.setAlignment(Element.ALIGN_CENTER);
         p3.setAlignment(Element.ALIGN_CENTER);
+        p4.setAlignment(Element.ALIGN_CENTER);
+        p5.setAlignment(Element.ALIGN_CENTER);
+        p6.setAlignment(Element.ALIGN_CENTER);
         ct.addElement(p2);
+        ct.addElement(p4);
+        ct.addElement(p5);
         ct.addElement(p);
+        ct.addElement(p6);
         ct.addElement(p3);
         ct.go();
         stp.getWriter().setCompressionLevel(PdfStream.BEST_COMPRESSION);
         stp.close();
-        reader.close();
         fout.close();
+        
     }
     /**
      * Este método firma digitalmente los archivos segun la cantidad de firmas que sena necesesarias dentro del PDF
@@ -279,8 +294,9 @@ public class Ziper {
      * @return DocumentArray que lista todos los archivos PDF bajo la catidad de firmas realizadas
      * @throws KeyStoreException,NoSuchAlgorithmException,IOException,CertificateException,UnrecoverableKeyException,DocumentException
      */
-    public ArrayList<Documentos> signaturePDF(String password, String signatory, MultipartFile file, int x, int y, int nro_signatures) throws KeyStoreException, NoSuchAlgorithmException, IOException, CertificateException, UnrecoverableKeyException, DocumentException {
+    public ArrayList<Documentos> signaturePDF(String password, String cargo, String signatory, MultipartFile file, int x, int y, int nro_signatures) throws KeyStoreException, NoSuchAlgorithmException, IOException, CertificateException, UnrecoverableKeyException, DocumentException {
         LOGGER.info("parametro password methodo(signaturePDF) {}", password);
+        LOGGER.info("parametro signatory methodo(signaturePDF) {}", cargo);
         LOGGER.info("parametro signatory methodo(signaturePDF) {}", signatory);
         LOGGER.info("parametro file methodo(signaturePDF) {}", file);
         LOGGER.info("parametro x methodo(signaturePDF) {}", x);
@@ -298,7 +314,7 @@ public class Ziper {
                 }
             }
             for (Documentos it6 : DocumentArray(path_out_zip_home, "pdf")) {
-                digital_signature(password, signatory, file, it6.rutaDoc, dir_pdf_firma+ path_system + nro_signatures, it6.nombreDoc, x, y, nro_signatures);
+                digital_signature(password, cargo, signatory, file, it6.rutaDoc, dir_pdf_firma+ path_system + nro_signatures, it6.nombreDoc, x, y, nro_signatures);
             }
         } else {
             directory = new File(dir_pdf_firma + path_system + nro_signatures);
@@ -311,7 +327,7 @@ public class Ziper {
             }
             int data = nro_signatures - 1;
             for (Documentos it6 : DocumentArray(dir_pdf_firma + path_system + data, "pdf")) {
-                digital_signature(password, signatory, file, it6.rutaDoc, dir_pdf_firma+ path_system + nro_signatures, it6.nombreDoc, x, y, nro_signatures);
+                digital_signature(password, cargo, signatory, file, it6.rutaDoc, dir_pdf_firma+ path_system + nro_signatures, it6.nombreDoc, x, y, nro_signatures);
             }
         }
         return DocumentArray(dir_pdf_firma + path_system + nro_signatures, "pdf");

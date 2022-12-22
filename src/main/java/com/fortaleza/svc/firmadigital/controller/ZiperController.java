@@ -21,12 +21,11 @@ import java.security.NoSuchAlgorithmException;
 @Slf4j
 @RequestMapping("/v1/ms-firmas")
 public class ZiperController {
-
     private static Logger LOGGER = LoggerFactory.getLogger(ZiperController.class);
     @Autowired
     private Ziper ziper;
     @RequestMapping(value ="/extract_files", method = RequestMethod.POST)
-    public ResponseEntity<Object> upFile(@RequestParam("files") MultipartFile files ) throws IOException{
+    public ResponseEntity<Object> extract_files(@RequestParam("files") MultipartFile files ) throws IOException{
         try {
             boolean state = ziper.extract_zip(files);
             if (!state){
@@ -44,8 +43,22 @@ public class ZiperController {
         }
     }
 
+    @RequestMapping(value = "/get_files_pdf_signed{carpetaFinal}", method = RequestMethod.GET)
+    @ResponseBody
+    public ResponseEntity<Object> get_files_pdf_signed(@RequestParam int carpetaFinal) throws Exception{
+        try{
+            System.out.println("PDF FIRMADOS LISTADOS");
+            LOGGER.info("SUCCESS-REQUEST: La solicitud files_pdf_signed se ejecuto con exito");
+            return ResponseEntity.status(HttpStatus.OK).body(ziper.listPDF_signed( carpetaFinal ));
+        }catch (Error error){
+            LOGGER.info("BAD-REQUEST: La solicitud files_pdf_signed se ejecuto con exito");
+            LOGGER.info(String.valueOf(error));
+            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response("Error contacte con el Administrador"));
+        }
+    }
+
     @RequestMapping(value="/get_files_pdf", method = RequestMethod.GET)
-    public  ResponseEntity<Object> list_word() throws IOException{
+    public  ResponseEntity<Object> get_files_pdf() throws IOException{
         try {
             var data = ziper.list_doc_pdf();
             System.out.println("PDF LISTADOS");
@@ -58,22 +71,10 @@ public class ZiperController {
         }
     }
 
-    @RequestMapping(value = "/files_pdf_signed", method = RequestMethod.POST)
-    public ResponseEntity<Object> convertPdf(@RequestBody ImportRequestFilesPDFSigned importRequestFilesPDFSigned) throws Exception{
-        try{
-            System.out.println("PDF FIRMADOS LISTADOS");
-            LOGGER.info("SUCCESS-REQUEST: La solicitud files_pdf_signed se ejecuto con exito");
-            return ResponseEntity.status(HttpStatus.OK).body(ziper.listPDF_signed(importRequestFilesPDFSigned.getCarpetaFinal()));
-        }catch (Error error){
-            LOGGER.info("BAD-REQUEST: La solicitud files_pdf_signed se ejecuto con exito");
-            LOGGER.info(String.valueOf(error));
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new Response("Error contacte con el Administrador"));
-        }
-    }
-
     @RequestMapping(value = "/signed_files_pdf", method = RequestMethod.POST)
-    public ResponseEntity<Object> firma_PDF(
+    public ResponseEntity<Object> signed_files_pdf(
             @RequestParam("contraseña") String clavePrivada,
+            @RequestParam("cargo") String cargo,
             @RequestParam("firmante") String firmante,
             @RequestParam("certificado") MultipartFile file,
             @RequestParam("x") int x,
@@ -86,7 +87,7 @@ public class ZiperController {
         }
         System.out.println("Archivos Firmados" + firma);
         LOGGER.info("SUCCESS-REQUEST: La solicitud signed_files_pdf se ejecuto con exito");
-        ziper.signaturePDF(clavePrivada, firmante, file, x, y, firma);
+        ziper.signaturePDF(clavePrivada, cargo, firmante, file, x, y, firma);
         return ResponseEntity.status(HttpStatus.OK)
                 .body(new Response("ok"));
     }
@@ -147,7 +148,7 @@ public class ZiperController {
     }
 
     @RequestMapping(value = "/download_zip_signature", method = RequestMethod.POST)
-    public ResponseEntity<Object> download_file(
+    public ResponseEntity<Object> download_zip_signature(
             @RequestBody ImportRequestDownloadZIP importRequestDownloadZIP
             ) throws IOException {
         try{
@@ -191,7 +192,7 @@ public class ZiperController {
     }
 
     @RequestMapping(value = "/cancel_process_signature", method = RequestMethod.POST)
-    public ResponseEntity<Object> cancel_process(){
+    public ResponseEntity<Object> cancel_process_signature(){
         try {
             ziper.endProcess();
             LOGGER.info("SUCCESS-REQUEST: La solicitud cancel_process_signature se ejecuto con exito.");
@@ -204,9 +205,9 @@ public class ZiperController {
         }
     }
 
-    @RequestMapping(value = "/zip_signature", method = RequestMethod.GET)
+    @RequestMapping(value = "/get_zip_signature{nameFolder}", method = RequestMethod.GET)
     @ResponseBody
-    public ResponseEntity<Object> list_zip(@RequestParam String nameFolder) {
+    public ResponseEntity<Object> get_zip_signature(@RequestParam String nameFolder) {
         try {
             var data = ziper.list_zip(nameFolder);
             System.out.println("ZIP LISTADOS");
