@@ -64,7 +64,6 @@ public class Ziper {
      */
     private ArrayList<Documentos> DocumentArray(String dir, String typeFile) throws IOException {
         LOGGER.info("parametro dir methodo(DocumentArray) {}", dir);
-        LOGGER.info("parametro typeFile methodo(DocumentArray) {}", typeFile);
         ArrayList<Documentos> arrayDocumentos = new ArrayList<>();
         java.io.File carpeta = new java.io.File(dir);
         LOGGER.debug("Obteniendo la direccion del folder {}", dir);
@@ -76,7 +75,6 @@ public class Ziper {
             if (it.isFile()) {
                 data = it.getName().split("\\.");
                 if (typeFile.equals(data[1])) {
-                    LOGGER.debug("Obteniendo la typeFile del doc {}", typeFile);
                     content = Files.readAllBytes(it.toPath());
                     encode = Base64.encodeBase64String(content);
                     arrayDocumentos.add(new Documentos(data[0], it.getPath(), data[1], encode));
@@ -93,7 +91,6 @@ public class Ziper {
      */
     private ArrayList<DocumentosZIP> ZIPArray(String dir, String typeFile){
         LOGGER.info("parametro dir methodo(ZIPArray) {}", dir);
-        LOGGER.info("parametro typeFile methodo(ZIPArray) {}", typeFile);
         ArrayList<DocumentosZIP> arrayZIP = new ArrayList<>();
         java.io.File carpeta = new java.io.File(dir);
         java.io.File[] lista = carpeta.listFiles();
@@ -148,7 +145,16 @@ public class Ziper {
      * @return True si se descomprimio con exito False si ocurrio un error
      * @throws IOException
      */
-    public Boolean extract_zip(MultipartFile file) throws IOException {
+    public Boolean extract_zip(MultipartFile file, String name_user) throws IOException {
+        File directory;
+        directory = new File(path_out_zip_home + path_system + name_user);
+        if(!directory.exists()){
+            if (directory.mkdir()){
+                System.out.println("Carpeta "+name_user);
+            }else{
+                System.out.println("Error al crear la carpeta");
+            }
+        }
         LOGGER.info("parametro file methodo(extract_zip) {}", file);
         String[] dataDoc;
         String[] dataFile;
@@ -158,7 +164,7 @@ public class Ziper {
                 ZipEntry entry = null;
                 while ((entry = zin.getNextEntry()) != null) {
                     if (entry.isDirectory()) {
-                        File file_ = new File(path_out_zip_home, path_system + entry.getName());
+                        File file_ = new File(path_out_zip_home, path_system + name_user + path_system + entry.getName());
                         file_.mkdir();
                         continue;
                     }
@@ -166,7 +172,7 @@ public class Ziper {
                     byte[] data = new byte[1024];
                     dataDoc = entry.getName().split("\\.");
                     if ("pdf".equals(dataDoc[1])) {
-                        try ( FileOutputStream fos = new FileOutputStream(path_out_zip_home + path_system + entry.getName())) {
+                        try ( FileOutputStream fos = new FileOutputStream(path_out_zip_home + path_system + name_user + path_system + entry.getName())) {
                             while ((len = zin.read(data)) != -1) {
                                 fos.write(data, 0, len);
                             }
@@ -185,8 +191,8 @@ public class Ziper {
      * @return DocumentArray que lista todos los archivos PDF
      * @throws IOException
      */
-    public ArrayList<Documentos> list_doc_pdf() throws IOException {
-        return DocumentArray(path_out_zip_home, "pdf");
+    public ArrayList<Documentos> list_doc_pdf(String name_user) throws IOException {
+        return DocumentArray(path_out_zip_home+path_system+name_user, "pdf");
     }
     /**
      * Este método obtiene lista todos los PDF descomprimidos del ZIP
@@ -194,9 +200,12 @@ public class Ziper {
      * @return DocumentArray que lista todos los archivos PDF bajo el folder carpetaFinal
      * @throws IOException
      */
-    public ArrayList<Documentos> listPDF_signed(int carpetaFinal) throws IOException {
+    public ArrayList<Documentos> listPDF_signed(int carpetaFinal, String name_user) throws IOException {
         LOGGER.info("parametro carpetaFinal methodo(listPDF_signed) {}", carpetaFinal);
-        return DocumentArray(dir_pdf_firma+path_system+carpetaFinal, "pdf");
+        LOGGER.info("parametro carpetaFinal methodo(name_user) {}", name_user);
+        String dire = dir_pdf_firma+path_system+name_user+path_system+carpetaFinal;
+        LOGGER.info("DIR FIRMADOS {}", dire);
+        return DocumentArray(dir_pdf_firma+path_system+name_user+path_system+carpetaFinal, "pdf");
     }
     /**
      * Este método firma digitalmente el PDF bajo los sigueintes parametros de entrada
@@ -211,7 +220,8 @@ public class Ziper {
      * @param nro_firma cantidad de firmas que se realizara dentro del PDF
      * @throws IOException,KeyStoreException,CertificateException,NoSuchAlgorithmException,UnrecoverableKeyException,DocumentException
      */
-    private void digital_signature(String password,String cargo, String signatory, MultipartFile dirCertificationPFX, String dirPDF, String dirPDF_out, String namePDF, int x, int y, int nro_firma) throws IOException, KeyStoreException, CertificateException, NoSuchAlgorithmException, UnrecoverableKeyException, DocumentException {
+    private void digital_signature(String name_user, String password, String cargo, String signatory, MultipartFile dirCertificationPFX, String dirPDF, String dirPDF_out, String namePDF, int x, int y, int nro_firma) throws IOException, KeyStoreException, CertificateException, NoSuchAlgorithmException, UnrecoverableKeyException, DocumentException {
+        LOGGER.info("parametro name_user methodo(digital_signature) {}", name_user);
         LOGGER.info("parametro password methodo(digital_signature) {}", password);
         LOGGER.info("parametro signatory methodo(digital_signature) {}", signatory);
         LOGGER.info("parametro cargo methodo(digital_signature) {}", cargo);
@@ -222,66 +232,73 @@ public class Ziper {
         LOGGER.info("parametro y methodo(digital_signature) {}", y);
         LOGGER.info("parametro nro_firma methodo(digital_signature) {}", nro_firma);
 
-        Base64 decoder = new Base64();
-        byte[] decodeBytes = decoder.decode(password);
-        String pass = new String(decodeBytes, "UTF-8");
+        try{
+            Base64 decoder = new Base64();
+            byte[] decodeBytes = decoder.decode(password);
+            String pass = new String(decodeBytes, "UTF-8");
 
-        File signPdfSrcFile = new File(dirPDF);
-        DateFormat dateFormat = new SimpleDateFormat("dd-M-yyyy hh:mm:ss");
-        String date = dateFormat.format(new Date());
+            File signPdfSrcFile = new File(dirPDF);
+            DateFormat dateFormat = new SimpleDateFormat("dd-M-yyyy hh:mm:ss");
+            String date = dateFormat.format(new Date());
 
-        KeyStore ks = KeyStore.getInstance("pkcs12");
-        char[] pwdArray = pass.toCharArray();
-        ks.load(new ByteArrayInputStream(dirCertificationPFX.getBytes()), pwdArray);
-        String alias = (String) ks.aliases().nextElement();
-        PrivateKey key = (PrivateKey) ks.getKey(alias, pwdArray);
-        Certificate[] chain = ks.getCertificateChain(alias);
+            KeyStore ks = KeyStore.getInstance("pkcs12");
+            char[] pwdArray = pass.toCharArray();
+            ks.load(new ByteArrayInputStream(dirCertificationPFX.getBytes()), pwdArray);
+            String alias = (String) ks.aliases().nextElement();
+            PrivateKey key = (PrivateKey) ks.getKey(alias, pwdArray);
+            Certificate[] chain = ks.getCertificateChain(alias);
 
-        PdfReader reader = new PdfReader(dirPDF);
-        File temp = new File(signPdfSrcFile.getParent(), System.currentTimeMillis() + ".pdf");
-        FileOutputStream fout = new FileOutputStream(dirPDF_out + path_system + namePDF + "_" + nro_firma + ".pdf");
-        PdfStamper stp = PdfStamper.createSignature(reader, fout, '\0', temp, true);
-        PdfSignatureAppearance sap = stp.getSignatureAppearance();
-        sap.setAcro6Layers(true);
-        sap.setCrypto(key, (java.security.cert.Certificate[]) chain, null, PdfSignatureAppearance.WINCER_SIGNED);
-        sap.setVisibleSignature(new Rectangle(x, y, x + 200, y + 200), reader.getNumberOfPages(), null);
-        reader.close();
-        PdfTemplate n2 = sap.getLayer(2);
-        n2.setCharacterSpacing(0.0f);
-        ColumnText ct = new ColumnText(n2);
-        ct.setSimpleColumn(n2.getBoundingBox().getLeft(), n2.getBoundingBox().getBottom(), n2.getBoundingBox().getWidth(), n2.getBoundingBox().getHeight());
-        n2.setRGBColorFill(255, 0, 0);
-        Paragraph p1 = new Paragraph(" ");
-        BaseFont bf = BaseFont.createFont(BaseFont.HELVETICA, BaseFont.WINANSI, BaseFont.EMBEDDED);
-        Font font1 = new Font(bf, 8, Font.ITALIC, Color.BLUE);
-        Font font2 = new Font(bf, 10, Font.BOLD, Color.BLUE);
-        Font font3 = new Font(bf, 8, Font.NORMAL, Color.BLUE);
-        Font font4 = new Font(bf, 10, Font.NORMAL, Color.BLUE);
-        p1.setFont(font1);
-        ct.addElement(p1);
-        Paragraph p = new Paragraph(signatory, font2);
-        p.setAlignment(Element.ALIGN_CENTER);
-        Paragraph p2 = new Paragraph("Firmado digitalmente por:", font1);
-        Paragraph p4 = new Paragraph("Representante Legal", font4);
-        Paragraph p5 = new Paragraph(cargo, font4);
-        Paragraph p6 = new Paragraph("Banco Fortaleza", font4);
-        Paragraph p3 = new Paragraph(date, font3);
-        p2.setAlignment(Element.ALIGN_CENTER);
-        p3.setAlignment(Element.ALIGN_CENTER);
-        p4.setAlignment(Element.ALIGN_CENTER);
-        p5.setAlignment(Element.ALIGN_CENTER);
-        p6.setAlignment(Element.ALIGN_CENTER);
-        ct.addElement(p2);
-        ct.addElement(p4);
-        ct.addElement(p5);
-        ct.addElement(p);
-        ct.addElement(p6);
-        ct.addElement(p3);
-        ct.go();
-        stp.getWriter().setCompressionLevel(PdfStream.BEST_COMPRESSION);
-        stp.close();
-        fout.close();
-        
+            PdfReader reader = new PdfReader(dirPDF);
+            File temp = new File(signPdfSrcFile.getParent(), System.currentTimeMillis() + ".pdf");
+            FileOutputStream fout = new FileOutputStream(dirPDF_out + path_system + namePDF + "_" + nro_firma + ".pdf");
+            PdfStamper stp = PdfStamper.createSignature(reader, fout, '\0', temp, true);
+
+            PdfSignatureAppearance sap = stp.getSignatureAppearance();
+            sap.setAcro6Layers(true);
+            sap.setCrypto(key, (java.security.cert.Certificate[]) chain, null, PdfSignatureAppearance.WINCER_SIGNED);
+            sap.setVisibleSignature(new Rectangle(x, y, x + 200, y + 200), reader.getNumberOfPages(), null);
+            PdfTemplate n2 = sap.getLayer(2);
+            n2.setCharacterSpacing(0.0f);
+            ColumnText ct = new ColumnText(n2);
+            ct.setSimpleColumn(n2.getBoundingBox().getLeft(), n2.getBoundingBox().getBottom(), n2.getBoundingBox().getWidth(), n2.getBoundingBox().getHeight());
+            n2.setRGBColorFill(255, 0, 0);
+            reader.close();
+
+            Paragraph p1 = new Paragraph(" ");
+            BaseFont bf = BaseFont.createFont(BaseFont.HELVETICA, BaseFont.WINANSI, BaseFont.EMBEDDED);
+            Font font1 = new Font(bf, 8, Font.ITALIC, Color.BLUE);
+            Font font2 = new Font(bf, 10, Font.BOLD, Color.BLUE);
+            Font font3 = new Font(bf, 8, Font.NORMAL, Color.BLUE);
+            Font font4 = new Font(bf, 10, Font.NORMAL, Color.BLUE);
+            p1.setFont(font1);
+            ct.addElement(p1);
+
+            Paragraph p = new Paragraph(signatory, font2);
+            p.setAlignment(Element.ALIGN_CENTER);
+            Paragraph p2 = new Paragraph("Firmado digitalmente por:", font1);
+            Paragraph p4 = new Paragraph("Representante Legal Banco Fortaleza", font4);
+            Paragraph p5 = new Paragraph(cargo, font4);
+            //Paragraph p6 = new Paragraph("Banco Fortaleza", font4);
+            Paragraph p3 = new Paragraph(date, font3);
+            p2.setAlignment(Element.ALIGN_CENTER);
+            p3.setAlignment(Element.ALIGN_CENTER);
+            p4.setAlignment(Element.ALIGN_CENTER);
+            p5.setAlignment(Element.ALIGN_CENTER);
+            //p6.setAlignment(Element.ALIGN_CENTER);
+            ct.addElement(p2);
+            ct.addElement(p4);
+            ct.addElement(p5);
+            ct.addElement(p);
+            //ct.addElement(p6);
+            ct.addElement(p3);
+            ct.go();
+            stp.getWriter().setCompressionLevel(PdfStream.BEST_COMPRESSION);
+            stp.close();
+            fout.close();
+        }
+        catch ( IOException ex ){
+            LOGGER.info(String.valueOf(ex));
+        }
     }
     /**
      * Este método firma digitalmente los archivos segun la cantidad de firmas que sena necesesarias dentro del PDF
@@ -294,7 +311,8 @@ public class Ziper {
      * @return DocumentArray que lista todos los archivos PDF bajo la catidad de firmas realizadas
      * @throws KeyStoreException,NoSuchAlgorithmException,IOException,CertificateException,UnrecoverableKeyException,DocumentException
      */
-    public ArrayList<Documentos> signaturePDF(String password, String cargo, String signatory, MultipartFile file, int x, int y, int nro_signatures) throws KeyStoreException, NoSuchAlgorithmException, IOException, CertificateException, UnrecoverableKeyException, DocumentException {
+    public ArrayList<Documentos> signaturePDF(String name_user, String password, String cargo, String signatory, MultipartFile file, int x, int y, int nro_signatures) throws KeyStoreException, NoSuchAlgorithmException, IOException, CertificateException, UnrecoverableKeyException, DocumentException {
+        LOGGER.info("parametro name_user methodo(signaturePDF) {}", name_user);
         LOGGER.info("parametro password methodo(signaturePDF) {}", password);
         LOGGER.info("parametro signatory methodo(signaturePDF) {}", cargo);
         LOGGER.info("parametro signatory methodo(signaturePDF) {}", signatory);
@@ -302,10 +320,18 @@ public class Ziper {
         LOGGER.info("parametro x methodo(signaturePDF) {}", x);
         LOGGER.info("parametro y methodo(signaturePDF) {}", y);
         LOGGER.info("parametro nro_signatures methodo(signaturePDF) {}", nro_signatures);
-
+        File directory2;
         File directory;
+        directory2 = new File(dir_pdf_firma + path_system + name_user);
+        if(!directory2.exists()){
+            if (directory2.mkdir()){
+                System.out.println("Carpeta "+name_user);
+            }else{
+                System.out.println("Error al crear la carpeta");
+            }
+        }
         if (nro_signatures == 0) {
-            directory = new File(dir_pdf_firma + path_system + nro_signatures);
+            directory = new File(dir_pdf_firma + path_system + name_user + path_system + nro_signatures);
             if(!directory.exists()){
                 if (directory.mkdir()){
                     System.out.println("Carpeta "+nro_signatures);
@@ -313,11 +339,11 @@ public class Ziper {
                     System.out.println("Error al crear la carpeta");
                 }
             }
-            for (Documentos it6 : DocumentArray(path_out_zip_home, "pdf")) {
-                digital_signature(password, cargo, signatory, file, it6.rutaDoc, dir_pdf_firma+ path_system + nro_signatures, it6.nombreDoc, x, y, nro_signatures);
+            for (Documentos it6 : DocumentArray(path_out_zip_home + path_system + name_user, "pdf")) {
+                digital_signature(name_user, password, cargo, signatory, file, it6.rutaDoc, dir_pdf_firma+ path_system + name_user + path_system + nro_signatures, it6.nombreDoc, x, y, nro_signatures);
             }
         } else {
-            directory = new File(dir_pdf_firma + path_system + nro_signatures);
+            directory = new File(dir_pdf_firma + path_system + name_user + path_system + nro_signatures);
             if(!directory.exists()){
                 if (directory.mkdir()){
                     System.out.println("Carpeta "+nro_signatures);
@@ -326,11 +352,11 @@ public class Ziper {
                 }
             }
             int data = nro_signatures - 1;
-            for (Documentos it6 : DocumentArray(dir_pdf_firma + path_system + data, "pdf")) {
-                digital_signature(password, cargo, signatory, file, it6.rutaDoc, dir_pdf_firma+ path_system + nro_signatures, it6.nombreDoc, x, y, nro_signatures);
+            for (Documentos it6 : DocumentArray(dir_pdf_firma + path_system + name_user + path_system + data, "pdf")) {
+                digital_signature(name_user, password, cargo, signatory, file, it6.rutaDoc, dir_pdf_firma+ path_system + name_user + path_system + nro_signatures, it6.nombreDoc, x, y, nro_signatures);
             }
         }
-        return DocumentArray(dir_pdf_firma + path_system + nro_signatures, "pdf");
+        return DocumentArray(dir_pdf_firma + path_system + name_user + path_system + nro_signatures, "pdf");
     }
     /**
      * Este método verifica que la contraseña del certificado sea correcta
@@ -365,15 +391,15 @@ public class Ziper {
      * @return ruta del archivo a descargar
      * @throws IOException
      */
-    public String compress_files_pdf(String name_zip, String folder_final) throws IOException {
-        String path_dowload = dir_pdf_firma + path_system + folder_final + path_system + name_zip + ".zip";
+    public String compress_files_pdf(String name_zip, String folder_final, String name_user) throws IOException {
+        String path_dowload = dir_pdf_firma + path_system + name_user + path_system + folder_final + path_system + name_zip + ".zip";
         LOGGER.info("parametro typeFile methodo(compress_files_pdf) {}", name_zip);
         LOGGER.info("parametro typeFile methodo(compress_files_pdf) {}", folder_final);
         System.out.println(path_dowload);
-        try ( ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(dir_pdf_firma + path_system + folder_final + path_system + name_zip + ".zip"))) {
+        try ( ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(dir_pdf_firma + path_system + name_user + path_system + folder_final + path_system + name_zip + ".zip"))) {
             LOGGER.debug("Obteniendo el folder_final {}", folder_final);
             LOGGER.debug("Obteniendo el name_zip {}", name_zip);
-            for (Documentos doc : DocumentArray(dir_pdf_firma + path_system + folder_final, "pdf")) {
+            for (Documentos doc : DocumentArray(dir_pdf_firma + path_system + name_user + path_system + folder_final, "pdf")) {
                 File file = new File(doc.rutaDoc);
                 ZipEntry entry = new ZipEntry(file.getName());
                 zos.putNextEntry(entry);
@@ -420,7 +446,7 @@ public class Ziper {
         try ( ZipOutputStream zos = new ZipOutputStream(new FileOutputStream(path_out_zip + path_system + nameFolderUser + path_system + name_zip + ".zip"))) {
             LOGGER.debug("Obteniendo el nameFolderUser {}", nameFolderUser);
             LOGGER.debug("Obteniendo el name_zip {}", name_zip);
-            for (Documentos doc : DocumentArray(dir_pdf_firma+ path_system +folder_final, "pdf")) {
+            for (Documentos doc : DocumentArray(dir_pdf_firma + path_system +nameFolderUser + path_system + folder_final, "pdf")) {
                 File file = new File(doc.rutaDoc);
                 ZipEntry entry = new ZipEntry(file.getName());
                 zos.putNextEntry(entry);
@@ -436,7 +462,12 @@ public class Ziper {
             }
             zos.finish();
         }
-        endProcess();
+        try {
+            endProcess(nameFolderUser);
+        }
+        catch (IOException error){
+            LOGGER.error(String.valueOf(error));
+        }
     }
     /**
      * Este método abstrae el path del ZIP a descargar
@@ -455,9 +486,9 @@ public class Ziper {
      * Este método limpia las carpetas al termnar el proceso de firma
      * @throws IOException
      */
-    public void endProcess() throws IOException {
-        deleteFile(path_out_zip_home);
-        deleteFile(dir_pdf_firma);
+    public void endProcess( String name_user ) throws IOException {
+        deleteFile(path_out_zip_home+path_system+name_user);
+        deleteFile(dir_pdf_firma+path_system+name_user);
     }
     /**
      * Este método limpia las carpetas segun el path
@@ -465,9 +496,14 @@ public class Ziper {
      * @throws IOException
      */
     private void deleteFile(String pathFile) throws IOException {
-        LOGGER.info("parametro typeFile methodo(deleteFile) {}", pathFile);
-        File directory = new File(pathFile);
-        LOGGER.debug("Obteniendo la direccion del folder {}", pathFile);
-        FileUtils.cleanDirectory(directory);
+        try {
+            LOGGER.info("parametro typeFile methodo(deleteFile) {}", pathFile);
+            File directory = new File(pathFile);
+            LOGGER.debug("Obteniendo la direccion del folder {}", pathFile);
+            FileUtils.cleanDirectory(directory);
+        }catch (IOException ex){
+            LOGGER.error(String.valueOf(ex));
+        }
+
     }
 }
