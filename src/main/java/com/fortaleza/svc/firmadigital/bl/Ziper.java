@@ -136,6 +136,15 @@ public class Ziper {
      */
     public ArrayList<DocumentosZIP> list_zip( String nameFolder ) {
         LOGGER.info("parametro nameFolder methodo(list_zip) {}", nameFolder);
+        File directory2;
+        directory2 = new File(path_out_zip + path_system + nameFolder);
+        if(!directory2.exists()){
+            if (directory2.mkdir()){
+                System.out.println("Carpeta "+nameFolder);
+            }else{
+                System.out.println("Error al crear la carpeta");
+            }
+        }
         String path = path_out_zip + path_system + nameFolder;
         return ZIPArray( path, "zip" );
     }
@@ -256,7 +265,7 @@ public class Ziper {
             PdfSignatureAppearance sap = stp.getSignatureAppearance();
             sap.setAcro6Layers(true);
             sap.setCrypto(key, (java.security.cert.Certificate[]) chain, null, PdfSignatureAppearance.WINCER_SIGNED);
-            sap.setVisibleSignature(new Rectangle(x, y, x + 200, y + 200), reader.getNumberOfPages(), null);
+            sap.setVisibleSignature(new Rectangle(x, y, x + 200, y + 150), reader.getNumberOfPages(), null);
             PdfTemplate n2 = sap.getLayer(2);
             n2.setCharacterSpacing(0.0f);
             ColumnText ct = new ColumnText(n2);
