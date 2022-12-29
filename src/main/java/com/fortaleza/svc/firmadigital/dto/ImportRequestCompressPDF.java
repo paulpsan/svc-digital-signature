@@ -6,6 +6,15 @@ import lombok.Data;
 public class ImportRequestCompressPDF {
     private String name_zip;
     private String folder_final;
+    private String name_user;
+
+    public String getName_user() {
+        return name_user;
+    }
+
+    public void setName_user(String name_user) {
+        this.name_user = name_user;
+    }
 
     public String getName_zip() {
         return name_zip;
