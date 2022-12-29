@@ -192,7 +192,7 @@ public class ZiperController {
         }
     }
 
-    @RequestMapping(value = "/cancel_process_signature", method = RequestMethod.POST)
+    @RequestMapping(value = "/cancel_process_signature{name_user}", method = RequestMethod.POST)
     public ResponseEntity<Object> cancel_process_signature(@RequestParam String name_user){
         try {
             ziper.endProcess(name_user);
