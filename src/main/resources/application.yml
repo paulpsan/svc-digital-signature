@@ -23,12 +23,12 @@ spring:
 #--------------------- DB Connection ------------------
   datasource:
     driver-class-name: org.postgresql.Driver
-    url: jdbc:postgresql://localhost:5432/bfo_signature_v1.0
-    username: postgres
-    password: admin
+    url: ${DB_URL:jdbc:postgresql://10.17.8.78:5432/signature}
+    username: ${DB_USERNAME:postgres}
+    password: ${DB_PASSWORD:postgres}
 #--------------------- Path Folders ------------------
-path-out-zip: C:\\Users\\jyujra\\Desktop\\ServerFile-BFO\\ZIP_OUT
-dir-pdf-firma: C:\\Users\\jyujra\\Desktop\\ServerFile-BFO\\PDF_FIRMADOS
-path-out-zip-home: C:\\Users\\jyujra\\Desktop\\ServerFile-BFO\\PDF_ZIP
+path-out-zip: /opt/files/ZIP_OUT
+dir-pdf-firma: /opt/files/PDF_FIRMADOS
+path-out-zip-home: /opt/files/PDF_ZIP
 #--------------------- Splits Server ------------------
-path-system: \\
+path-system: /
